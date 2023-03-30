@@ -1,0 +1,124 @@
+###
+
+POST http://localhost:8000/api/shoplist/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
+
+{
+    "shop": "shop1",
+    "url":"",
+    "file":"/home/ekaterina/PycharmProjects/final/python-final-diplom/orders/data/shop1.yaml"
+}
+
+###
+
+POST http://localhost:8000/api/login/
+Content-Type: application/json
+
+{
+  "email": "katja.belova@gmail.com",
+  "password": "1234"
+}
+
+###
+
+POST http://localhost:8000/api/register/
+Content-Type: application/json
+
+{ "first_name": "Firstname",
+  "last_name":"Lastname",
+  "third_name":"-",
+  "username": "testuser",
+  "email": "katya-belova@inbox.ru",
+  "password": "1234",
+  "type": "-",
+  "company":"-",
+  "position": "-"
+}
+
+###
+
+GET http://localhost:8000/api/products/
+Content-Type: application/json
+
+
+###
+
+GET http://localhost:8000/api/products/1/
+Content-Type: application/json
+
+###
+
+GET http://localhost:8000/api/orders/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
+
+
+###
+
+GET http://localhost:8000/api/order_detail/3/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
+
+###
+
+POST http://localhost:8000/api/contact/
+Content-Type: application/json; charset=utf-8
+Authorization: Token 29cf82ca4d88285c0d4a08414f7150fe4df1cc4e
+
+
+ {
+ "country":"Russia",
+ "city":"Moskow",
+ "street":"nostreet",
+ "house":"5",
+ "building":"2",
+ "apartment":"22",
+ "index":"1113434"
+ }
+
+###
+
+POST http://localhost:8000/api/basket/
+Content-Type: application/json; charset=utf-8
+
+{
+  "user_id": 1,
+  "quantity": 2,
+  "product": 1
+}
+
+
+###
+
+GET http://localhost:8000/api/orders/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
+
+###
+
+GET http://localhost:8000/api/orders/4/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
+
+###
+
+PATCH http://localhost:8000/api/confirm/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
+
+{
+ "order_id": 4,
+ "country":"Russia",
+ "city":"Moskow",
+ "street":"nostreet",
+ "house":"5",
+ "building":"2",
+ "apartment":"22",
+ "index":"1113434"
+}
+
+###
+GET http://localhost:8000/api/thanks/
+Content-Type: application/json
+Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
