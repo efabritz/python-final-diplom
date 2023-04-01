@@ -269,7 +269,7 @@ def confirm_user_address(request):
 
 #
 # {
-# "order_id": 1
+# "order_id": 1,
 #  "country":"Russia",
 #  "city":"Moscow",
 #  "street":"street11",

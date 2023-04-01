@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from .models import User
 
 # класс для пользовательского login
@@ -8,7 +10,7 @@ class CustomAuthBackend():
             success = user.check_password(password)
             if success:
                 return user
-        except User.DoesnotExist:
+        except ObjectDoesNotExist:
             pass
         return None
 

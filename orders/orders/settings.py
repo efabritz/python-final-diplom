@@ -134,6 +134,7 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'backend_order.User'
 
 REST_FRAMEWORK = {
+        'TEST_REQUEST_DEFAULT_FORMAT': 'json',
         'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ]

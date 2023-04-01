@@ -22,10 +22,8 @@ from rest_framework.routers import DefaultRouter
 from backend_order.views import *
 
 r = DefaultRouter()
-#r.register('register', UserRegistrationViewSet),
 r.register('products', ProductViewSet)
 r.register('product_detail', ProductInShopViewSet)
-#r.register('basket/<int:pk>/', BasketViewSet)
 r.register('orders', OrderViewSet)
 r.register('order_detail', OrderItemViewSet)
 r.register('order/<int:pk>/', OrderViewSet)
