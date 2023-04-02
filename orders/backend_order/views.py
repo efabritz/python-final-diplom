@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from .YReader import Shop_YReader
 from .serializers import *
 from .EmailBackend import *
+from .tasks import registration_email_task, confirmation_order_email_task
 
 # не получилось обычной генерации токен через админ
 # path('auth/', obtain_auth_token)
@@ -43,6 +44,9 @@ from .EmailBackend import *
 # }
 
 # вход в приложение с помощью адреса эл. почты и пароля
+
+
+
 class UserLogin(APIView):
     def post(self, request):
         user = authenticate(email=request.data.get('email'), password=request.data.get('password'))
@@ -83,7 +87,8 @@ class UserRegister(APIView):
                 user = user_serializer.save()
                 user.set_password(request.data['password'])
                 user.save()
-                registration_email(user.username, user.email)
+               # registration_email(user.username, user.email)
+                registration_email_task.delay(user.username, user.email)
                 return JsonResponse({'Status': 'True', 'Details': f'Пользователь {user.username} создан'})
             else:
                 return JsonResponse({'Status': 'Error', 'Details': 'Ошибка в базе данных'})
@@ -92,6 +97,8 @@ class UserRegister(APIView):
 
 
 # Products list
+
+
 #
 # GET http://localhost:8000/api/products/
 # Content-Type: application/json
@@ -354,7 +361,8 @@ class OrderConfirmationView(APIView):
             product_in_shop.save()
 
             # подтверждение заказа с необходимыми параметрами
-            confirmation_order_email(request.user.email, username, order_id, product_infos, address_dict)
+            # confirmation_order_email(request.user.email, username, order_id, product_infos, address_dict)
+            confirmation_order_email_task.delay(request.user.email, username, order_id, product_infos, address_dict)
             return JsonResponse({'Status': 'True', 'Detail': f'Заказ {order_id} подтвержден'})
         except DatabaseTransferError:
             print('Database error during order confirmation')

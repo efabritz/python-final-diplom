@@ -153,3 +153,7 @@ EMAIL_HOST_USER = os.environ.get('HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('HOST_PASSWORD')
 EMAIL_USE_TLS = True
 
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
