@@ -17,8 +17,6 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
-#from backend_order.views import *
-#from backend_order.views import *
 from backend_order.views import *
 
 r = DefaultRouter()
@@ -31,6 +29,7 @@ r.register('order/<int:pk>/', OrderViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', obtain_auth_token),
+    path('accounts/', include('allauth.urls')),
     path('api/', include('backend_order.urls')),
     path('api/', include(r.urls)),
 ]

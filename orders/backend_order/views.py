@@ -11,6 +11,7 @@ from .YReader import Shop_YReader
 from .serializers import *
 from .EmailBackend import *
 from .tasks import registration_email_task, confirmation_order_email_task
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 # не получилось обычной генерации токен через админ
 # path('auth/', obtain_auth_token)
@@ -48,6 +49,7 @@ from .tasks import registration_email_task, confirmation_order_email_task
 
 
 class UserLogin(APIView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def post(self, request):
         user = authenticate(email=request.data.get('email'), password=request.data.get('password'))
         if not user:
@@ -70,6 +72,7 @@ class UserLogin(APIView):
 
 # регистрация пользователя с необходимымы параметрами
 class UserRegister(APIView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def post(self, request):
         if not {'first_name', 'last_name', 'third_name', 'email', 'password', 'username', 'company', 'position', 'type'}.issubset(request.data):
             return JsonResponse({'Status':'Error', 'Details':'Заполнены не все поля'})
@@ -117,11 +120,13 @@ class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (IsProductActionAllowed,)
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
 class ProductInShopViewSet(ModelViewSet):
     queryset = ProductsInShop.objects.all()
     serializer_class = ProductsInShopSerializer
     permission_classes = (IsProductActionAllowed,)
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
 # POST http://localhost:8000/api/basket/
 # Content-Type: application/json
@@ -135,6 +140,7 @@ class ProductInShopViewSet(ModelViewSet):
 # товары добавляются в таблицу  Order, OrderItem
 #
 class BasketView(APIView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def post(self, request):
         user_id = request.data['user_id']
 
@@ -213,6 +219,7 @@ class BasketView(APIView):
 # 
 class AddUserAddressView(APIView):
     permission_classes = (IsAuthenticated,)
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def post(self, request):
         user_id = request.user.id
 
@@ -289,6 +296,7 @@ def confirm_user_address(request):
 class OrderConfirmationView(APIView):
     # пользователь должен быть авторизован
     permission_classes = (IsAuthenticated,)
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def patch(self, request):
         user_id = request.user.id
         # поиск пользователя по id
@@ -412,6 +420,7 @@ class OrderViewSet(ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = (IsAuthenticated, IsOrderActionAllowed)
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
 
 # GET http://localhost:8000/api/order_detail/
@@ -426,6 +435,7 @@ class OrderItemViewSet(ModelViewSet):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
     permission_classes = (IsAuthenticated, IsOrderActionAllowed)
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
 # POST http://localhost:8000/api/shoplist/
 # Content-Type: application/json

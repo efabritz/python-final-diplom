@@ -43,7 +43,39 @@ INSTALLED_APPS = [
     'backend_order',
     'rest_framework',
     'rest_framework.authtoken',
+
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
 ]
+
+SITE_ID = 3
+
+# http://127.0.0.1:8000/accounts/google/login/
+# http://127.0.0.1:8000/accounts/github/login/
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'github': {
+        'SCOPE': [
+            'user',
+            'repo',
+            'read:org',
+        ],
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -68,6 +100,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',
             ],
         },
     },
@@ -137,18 +170,22 @@ REST_FRAMEWORK = {
         'TEST_REQUEST_DEFAULT_FORMAT': 'json',
         'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '60/minute',
+        'anon': '40/minute',
+    }
 }
 
 AUTHENTICATION_BACKENDS = [
     'backend_order.CustomAuthBackend.CustomAuthBackend',
     "django.contrib.auth.backends.ModelBackend",
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-# EMAIL_HOST_USER = os.environ.get('HOST_USER')
-# EMAIL_HOST_PASSWORD = os.environ.get('HOST_PASSWORD')
 EMAIL_HOST_USER = os.environ.get('HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('HOST_PASSWORD')
 EMAIL_USE_TLS = True
