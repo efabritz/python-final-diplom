@@ -13,27 +13,15 @@ from .EmailBackend import *
 from .tasks import registration_email_task, confirmation_order_email_task
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-# не получилось обычной генерации токен через админ
+# получение токена
 # path('auth/', obtain_auth_token)
-# module_dir = os.getcwd() # get current directory
-# file_path = os.path.join(module_dir, 'data', 'shop1.yaml')
-
-###
-# TODO:
-
-# c1. Создано Celery-приложение c методами:
-#    - send_email
-#    - do_import
-# 2. Создан view для запуска Celery-задачи do_import из админки.elery
-
-###
-
-# dockerize
-
-###
-
-# tests (?)
-
+# POST http://localhost:8000/auth/
+# Content-Type: application/json
+#
+# {
+#     "username": "testuser",
+#     "password": "1234"
+# }
 
 
 # POST http://localhost:8000/api/login/
@@ -45,8 +33,6 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 # }
 
 # вход в приложение с помощью адреса эл. почты и пароля
-
-
 
 class UserLogin(APIView):
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
@@ -79,10 +65,10 @@ class UserRegister(APIView):
         try:
             username = request.data['username']
             email = request.data['email']
-            # проверка, существует ли пользователь с передаваемыми почтой и именем
+            ''' проверка, существует ли пользователь с передаваемыми почтой и именем '''
             if User.objects.filter(username=username) or User.objects.filter(email=email):
                 return JsonResponse({'Status': 'Error', 'Details': 'Имя или эл.почта пользователя уже существует'})
-            # если не указан тип пользвателя, то установи тип "покупатель"
+            ''' если не указан тип пользвателя, то установи тип "покупатель" '''
             if not (request.data['type'] in ['admin', 'shop', 'customer']):
                 request.data['type'] = 'customer'
             user_serializer = UserSerializer(data=request.data)
@@ -90,7 +76,7 @@ class UserRegister(APIView):
                 user = user_serializer.save()
                 user.set_password(request.data['password'])
                 user.save()
-               # registration_email(user.username, user.email)
+                # registration_email(user.username, user.email)
                 registration_email_task.delay(user.username, user.email)
                 return JsonResponse({'Status': 'True', 'Details': f'Пользователь {user.username} создан'})
             else:
@@ -138,60 +124,59 @@ class ProductInShopViewSet(ModelViewSet):
 # }
 
 # товары добавляются в таблицу  Order, OrderItem
-#
 class BasketView(APIView):
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def post(self, request):
         user_id = request.data['user_id']
 
-        # проверка, существует ли пользователм с id
+        ''' проверка, существует ли пользователм с id '''
         if not user_id:
             raise UserNotFoundError
         try:
-            # выборка пользователя
+            ''' выборка пользователя '''
             user = User.objects.filter(id=user_id)[0]
         except DatabaseTransferError:
             return JsonResponse({'Status':'Error', 'Detail':'Пользователь не существует'})
 
-        #количество и данные о продукте
+        ''' количество и данные о продукте '''
         quantity = int(request.data['quantity'])
         product_id = request.data['product']
 
-        # проверка, существует ли товар с данным id
+        ''' проверка, существует ли товар с данным id '''
         if not product_id:
             return JsonResponse({'Status': 'Error', 'Detail':'Товар не найден'})
         try:
-            # выбор товара
+            ''' выбор товара '''
             product = Product.objects.filter(id=product_id)[0]
             product_name = product.name
         except DatabaseTransferError:
             return JsonResponse({'Status':'Error', 'Detail':'Товар не существует'})
-        # если количество товара не определено или меньше, равно нуля
+        ''' если количество товара не определено или меньше, равно нуля '''
         if not quantity or quantity <= 0:
             return JsonResponse({'Status': 'Error', 'Detail': 'Количество не определено'})
         try:
-            # выбор деталям по товару
+            ''' выбор деталей по товару '''
             products_in_shop = ProductsInShop.objects.filter(product=product_id)
         except DatabaseTransferError:
             return JsonResponse({'Status': 'Error', 'Detail':'Информация по товару не найдена'})
 
-        # согласно БД только одно поле "товара в магазине" соотвествует одному "товару"
+        ''' согласно БД только одно поле "товара в магазине" соотвествует одному "товару" '''
         product_in_shop = products_in_shop[0]
 
-        # сколько товара доступно в магазине
+        ''' сколько товара доступно в магазине '''
         exs_quantity = int(product_in_shop.quantity)
-        # если товара нет в наличии - ошибка
+        ''' если товара нет в наличии - ошибка '''
         if exs_quantity == 0:
             return JsonResponse({'Status': 'Error', 'Detail': 'Product is sold out'})
-        # если желаемое количество товара превышает количество товара в наличии,
-        # количество устанавливается на доступное
+        ''' если желаемое количество товара превышает количество товара в наличии,
+        количество устанавливается на доступное '''
         order_quantity = exs_quantity if quantity > exs_quantity else quantity
-        # рассчет цены товара
+        ''' рассчет цены товара '''
         price = float(product_in_shop.price) * order_quantity
         shop = product_in_shop.shop
 
         try:
-            # создание заказа
+            ''' создание заказа '''
             order, created = Order.objects.get_or_create(user=user, state='basket')
             OrderItem.objects.get_or_create(quantity=order_quantity, order=order, product=product, shop=shop)
         except DatabaseTransferError:
@@ -216,7 +201,6 @@ class BasketView(APIView):
 #  }
 
 # класс для создания пользовательского адреса
-# 
 class AddUserAddressView(APIView):
     permission_classes = (IsAuthenticated,)
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
@@ -232,15 +216,15 @@ class AddUserAddressView(APIView):
 
         if address_obj:
             address = address_obj[0]
-        # проверка, существует ли адрес пользотеля, с переданным id, в таблице
-        # если существует, то адрес нужно обновить
+        '''  проверка, существует ли адрес пользотеля, с переданным id, в таблице
+         если существует, то адрес нужно обновить '''
         if address:
             user_serializer = UserAddressSerializer(address, data=address_data, partial=True)
         else:
             user_serializer = UserAddressSerializer(data=address_data)
 
         if user_serializer.is_valid():
-            # сохранение адреса в БД
+            ''' сохранение адреса в БД '''
             user_address = user_serializer.save()
             user_address.save()
             return JsonResponse({'Status': 'True', 'Detail': 'Aдрес сохранен'})
@@ -250,7 +234,7 @@ class AddUserAddressView(APIView):
 # функция сохранения адреса пользователя
 def confirm_user_address(request):
     user_id = request.user.id
-    # проверка адреса пользователя, который вводится
+    ''' проверка адреса пользователя, который вводится '''
     address_data = {"country": request.data['country'], "city": request.data['city'], "street": request.data['street'],
                     "house": request.data['house'], "building": request.data['building'],
                     "apartment": request.data['apartment'], "index": request.data['index'], 'user': user_id}
@@ -260,15 +244,15 @@ def confirm_user_address(request):
 
     if address_obj:
         address = address_obj[0]
-    # проверка, существует ли адрес пользотеля, с переданным id, в таблице
-    # если существует, то адрес нужно обновить
+    ''' проверка, существует ли адрес пользотеля, с переданным id, в таблице
+     если существует, то адрес нужно обновить '''
     if address:
         user_serializer = UserAddressSerializer(address, data=address_data, partial=True)
     else:
         user_serializer = UserAddressSerializer(data=address_data)
 
     if user_serializer.is_valid():
-        # сохранение адреса в БД
+        ''' сохранение адреса в БД '''
         user_address = user_serializer.save()
         user_address.save()
         return True
@@ -276,7 +260,6 @@ def confirm_user_address(request):
         return False
 
 
-#
 # PATCH http://localhost:8000/api/confirm/
 # Content-Type: application/json
 # Authorization: Token 5cc7a17a5fed348b4a4023a112443c3d382aacb6
@@ -294,20 +277,20 @@ def confirm_user_address(request):
 # }
 # подтверждение пользовательского заказа
 class OrderConfirmationView(APIView):
-    # пользователь должен быть авторизован
+    ''' пользователь должен быть авторизован '''
     permission_classes = (IsAuthenticated,)
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
     def patch(self, request):
         user_id = request.user.id
-        # поиск пользователя по id
+        ''' поиск пользователя по id '''
         user = User.objects.filter(id=user_id)[0]
         username = f'{user.last_name} {user.first_name}'
 
-        # вызов функции, кот. сохраняет/обновляет адрес пользователя
+        ''' вызов функции, кот. сохраняет/обновляет адрес пользователя '''
         if not confirm_user_address(request):
             return JsonResponse({'Status': 'Error', 'Detail': 'Неверно заполнен адрес'})
 
-        # адрес пользователя из БД
+        ''' адрес пользователя из БД '''
         address_obj = UserAddress.objects.filter(user=user_id)
 
         order_id = request.data['order_id']
@@ -315,14 +298,14 @@ class OrderConfirmationView(APIView):
             raise OrderNotFoundError
 
         try:
-            # поиск заказа по id
+            ''' поиск заказа по id '''
             order = Order.objects.filter(id=order_id)[0]
             order_items = OrderItem.objects.filter(order=order_id)
         except OrderNotFoundError:
             print("Error: Заказ не существует")
             return JsonResponse({'Status': 'Error', 'Detail': 'Заказа не существует'})
 
-        # проверка, совпадает ли id авторизированного пользователя с id, который был указан в заказе
+        ''' проверка, совпадает ли id авторизированного пользователя с id, который был указан в заказе '''
         if order.user_id != user_id:
             return JsonResponse({'Status': 'Error', 'Detail': 'Ошибка пользователя'})
 
@@ -331,44 +314,44 @@ class OrderConfirmationView(APIView):
         else:
             return JsonResponse({'Status': 'Error', 'Detail': 'Адрес не указан'})
 
-        # формируется адресный словарь
+        ''' формируется адресный словарь '''
         address_dict = UserAddressSerializer(address).data
 
         product_infos = {}
 
-        # по каждому полю деталей заказа
+        ''' по каждому полю деталей заказа '''
         for item in order_items:
-            # поиск информации по товару
+            ''' поиск информации по товару '''
             product = Product.objects.get(id=item.product_id)
             product_in_shop = ProductsInShop.objects.filter(product=product.id)[0]
-            # проверка существующего количества
+            ''' проверка существующего количества '''
             exs_quantity = int(product_in_shop.quantity)
-            # количества товара в заказе
+            ''' количества товара в заказе '''
             quantity = item.quantity
-            # проверка, есть ли товар в наличии
+            ''' проверка, есть ли товар в наличии '''
             if exs_quantity == 0:
                 return JsonResponse({'Status': 'Error', 'Detail': 'Товар раскуплен'})
-            # если товара в наличии меньше, чем в заказе, выбери количество в наличии
+            ''' если товара в наличии меньше, чем в заказе, выбери количество в наличии '''
             order_quantity = exs_quantity if quantity > exs_quantity else quantity
 
-            # если настоящее количество товара в заказе отличается от рассчитаного, то выбери рассчитаную
+            ''' если настоящее количество товара в заказе отличается от рассчитаного, то выбери рассчитаную '''
             if quantity != order_quantity:
                 item.quantity = order_quantity
                 item.save()
-            # рассчет цены
+            ''' рассчет цены '''
             price = float(product_in_shop.price) * order_quantity
-            # информация по товарам записывается в словарь
+            ''' информация по товарам записывается в словарь '''
             product_infos[product.id] = (product.name, product.model, order_quantity, price,)
 
         try:
-            # изменение статуса заказа
+            ''' изменение статуса заказа '''
             Order.objects.filter(id=order_id).update(state='confirmed', date=datetime.datetime.now(), user=user_id)
 
-            # обновление количества в таблице товаров
+            ''' обновление количества в таблице товаров '''
             product_in_shop.quantity = exs_quantity - order_quantity
             product_in_shop.save()
 
-            # подтверждение заказа с необходимыми параметрами
+            ''' подтверждение заказа с необходимыми параметрами '''
             # confirmation_order_email(request.user.email, username, order_id, product_infos, address_dict)
             confirmation_order_email_task.delay(request.user.email, username, order_id, product_infos, address_dict)
             return JsonResponse({'Status': 'True', 'Detail': f'Заказ {order_id} подтвержден'})
@@ -448,20 +431,19 @@ class OrderItemViewSet(ModelViewSet):
 # }
 
 class SendShopList(APIView):
-    # проверка на авторизированного супер-пользователя и разрешение транзакции
+    ''' проверка на авторизированного супер-пользователя и разрешение транзакции '''
     permission_classes = (IsAuthenticated, IsTransferAllowed, )
 
     def post(self, request):
-        # путь к файлу, содержащему информацию по магазину
+
+        ''' путь к файлу, содержащему информацию по магазину '''
         file = request.data.get('file')
 
-        # создание объекта для парсинга yaml файла в json формат
-        # и добавление данных в БД
+        ''' создание объекта для парсинга yaml файла в json формат и добавление данных в БД '''
         reader = Shop_YReader(file)
         json_file = reader.parse_yaml()
 
-        # если возникло исключение во время чередачи данных в БД
-        # переменная result будет False и вызовет исключение
+        '''если возникло исключение во время чередачи данных в БД переменная result будет False и вызовет исключение '''
         result = reader.insert_to_db(json_file)
 
         if result:

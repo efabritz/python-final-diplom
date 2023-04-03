@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.core.mail import send_mail
 
-# без celery
-# функции для отправки мэйла пользователю после регистрации и подтвержения заказа
+''' без celery
+функции для отправки мэйла пользователю после регистрации и подтвержения заказа  '''
 
 def registration_email(username, recipient_email):
     subject = 'Регистрация на ORDERS сайте'

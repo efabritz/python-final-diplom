@@ -53,7 +53,6 @@ class ProductParameterSerializer(serializers.ModelSerializer):
         fields = ('id', 'value', 'product_in_shop', 'parameter',)
 
 class OrderSerializer(serializers.ModelSerializer):
-  #  user = UserSerializer()
 
     class Meta:
         model = Order
