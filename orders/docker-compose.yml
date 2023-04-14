@@ -1,0 +1,54 @@
+# Старт проекта
+# docker-compose run final_dip
+# docker-compose run final_dip python manage.py migrate (опционально)
+# docker-compose up -d
+
+version: '3.8'
+
+services:
+  final_dip:
+    build: .
+    container_name: final_dip
+    command: gunicorn orders.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/src
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - CELERY_BROKER=redis://redis:6379/
+      - CELERY_BACKEND=redis://redis:6379/
+    depends_on:
+      - pgdb
+      - redis
+  celery:
+    build: .
+    command: celery -A orders worker --loglevel=info --concurrency 1 -E
+    volumes:
+      - .:/src
+    depends_on:
+      - final_dip
+      - redis
+  pgdb:
+    image: postgres:latest
+    ports:
+      - "5432"
+    container_name: pgdb
+    environment:
+      - POSTGRES_DB=final_db1
+      - POSTGRES_USER=katja
+      - POSTGRES_PASSWORD=1234
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+  redis:
+    image: "redis:alpine"
+  nginx:
+    build: ./nginx
+    ports:
+      - 1337:80
+    depends_on:
+      - final_dip
+volumes:
+  pgdata:

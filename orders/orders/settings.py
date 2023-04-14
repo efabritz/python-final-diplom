@@ -23,12 +23,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '6^+!)95&gc!f#+qdfx2leyv%u+ekpw@1w$a#1ljyy1*_3l7&u0'
+# SECRET_KEY = '6^+!)95&gc!f#+qdfx2leyv%u+ekpw@1w$a#1ljyy1*_3l7&u0'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 
 # Application definition
@@ -119,8 +122,9 @@ DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'final_db',
-        'HOST': '127.0.0.1',
+        'NAME': 'final_db1',
+#        'HOST': '127.0.0.1', (local usage)
+        'HOST': 'pgdb',
         'PORT': '5432',
         'USER': 'katja',
         'PASSWORD': '1234'
@@ -194,8 +198,12 @@ EMAIL_HOST_PASSWORD = os.environ.get('HOST_PASSWORD')
 EMAIL_USE_TLS = True
 
 # Celery settings
-CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+# Local usage
+# CELERY_BROKER_URL = "redis://localhost:6379"
+# CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Orders APP',

@@ -1,7 +1,14 @@
-django
-djangorestframework
+Django==4.1.7
+djangorestframework==3.14.0
+pytest==7.2.2
+python-dotenv==1.0.0
+PyYAML==6.0
 django-rest-passwordreset
 psycopg2-binary
-pyyaml
 ujson
 requests
+gunicorn==20.1.0
+django-allauth>=0.44.0
+drf-spectacular>=0.22.1
+redis>=3.5
+celery>=5.0

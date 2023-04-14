@@ -22,9 +22,10 @@ from backend_order.views import *
 r = DefaultRouter()
 r.register('products', ProductViewSet)
 r.register('product_detail', ProductInShopViewSet)
+r.register('orders/<int:pk>/', OrderViewSet)
 r.register('orders', OrderViewSet)
 r.register('order_detail', OrderItemViewSet)
-r.register('order/<int:pk>/', OrderViewSet)
+r.register('order_detail/<int:pk>/', OrderItemViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

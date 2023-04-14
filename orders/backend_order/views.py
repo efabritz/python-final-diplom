@@ -12,6 +12,7 @@ from .serializers import *
 from .EmailBackend import *
 from .tasks import registration_email_task, confirmation_order_email_task
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.response import Response
 
 # получение токена
 # path('auth/', obtain_auth_token)
@@ -405,6 +406,16 @@ class OrderViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsOrderActionAllowed)
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
+    def retrieve(self, request, *args, **kwargs):
+
+        instance = self.get_object()
+        serializer_instance = self.get_serializer(instance)
+        order_id = serializer_instance.data['id']
+        query_item = OrderItem.objects.filter(order=order_id)
+        serializer_item = OrderItemSerializer(query_item, many=True)
+
+        return Response(serializer_item.data)
+
 
 # GET http://localhost:8000/api/order_detail/
 # Content-Type: application/json
@@ -417,8 +428,9 @@ class OrderViewSet(ModelViewSet):
 class OrderItemViewSet(ModelViewSet):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
-    permission_classes = (IsAuthenticated, IsOrderActionAllowed)
+    permission_classes = (IsAuthenticated,)
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
 
 # POST http://localhost:8000/api/shoplist/
 # Content-Type: application/json
